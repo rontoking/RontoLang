@@ -1,0 +1,26 @@
+static float timeLeft = 1.5;
+static float radius = 50;
+
+static main(){
+    shapeColor("blue");
+}
+
+static update(){
+    if(timeLeft < 0.5){
+        filledShapes;
+        radius -= deltaTime * 50;
+        shapeColor("red");
+    }else if(timeLeft < 1){
+        lineShapes;
+        shapeColor("green");
+    }else{
+        pointShapes;
+        radius += deltaTime * 50;
+        shapeColor("blue");
+    }
+    if(timeLeft < 0){
+        timeLeft = 1.5;
+    }
+    circle(window.centerx, window.centery, radius);
+    timeLeft -= deltaTime;
+}

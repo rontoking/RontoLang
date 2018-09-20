@@ -1,0 +1,24 @@
+static main(){
+    console.visible = true;
+}
+
+static update(){
+    if(console.entered){
+        switch(console.input){
+            case("/host"){
+                server.host(25565);
+            }
+            case("/join"){
+                client.join("localhost", 25565);
+            }
+            case(){
+                socket.send(console.input);
+            }
+        }
+        console.output += console.input + "\n";
+        console.input = "";
+    }
+    if(socket.next && packet.norm){
+        console.output += packet.data + "\n";
+    }
+}

@@ -1,0 +1,32 @@
+static main(){
+    Dog d = new Dog("Bob");
+    println(d.name);
+    println(d.isAlive);
+    d.bark();
+}
+}
+
+class Dog extends Animal{
+    string name;
+
+    public Dog(string name){
+        construct;
+        super();
+    }
+
+    public void bark(){
+        super.bark();
+    }
+}
+
+class Animal{
+    bool isAlive;
+
+    public Animal(){
+        isAlive = true;
+    }
+
+    private void bark(){
+        println("SPEAKING!");
+    }
+}

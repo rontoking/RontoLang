@@ -1,0 +1,28 @@
+static sprite spr;
+static camera2d cam;
+
+static main(){
+    spr = sprite("rontolang.png");
+    cam = camera2d();
+    cam.mount;
+}
+
+static update(){
+    spr.draw;
+    if(keyDown("W")){
+        cam.y += 10;
+    }if(keyDown("A")){
+        cam.x -= 10;
+    }if(keyDown("S")){
+        cam.y -= 10;
+    }if(keyDown("D")){
+        cam.x += 10;
+    }if(keyDown("L-Ctrl")){
+        cam.rotate(1);
+    }if(keyDown("L-Shift")){
+        cam.x = cam.y = 0;
+        cam.zoom = 1;
+    }
+    cam.zoom += mouseScroll * 0.1;
+    cam.zoom.limit(0.1, 2);
+}
