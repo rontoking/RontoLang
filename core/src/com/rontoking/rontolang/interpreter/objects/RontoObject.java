@@ -14,6 +14,10 @@ public class RontoObject implements Serializable{
         properties = new Block(null);
     }
 
+    public RontoObject(Block block){ // Used by a child class.
+        properties = block;
+    }
+
     protected Reference func(Instruction child, Interpreter interpreter, Class ownerClass, Block instanceBlock){
         return null;
     }

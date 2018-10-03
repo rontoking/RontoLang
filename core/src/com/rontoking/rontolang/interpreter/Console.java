@@ -6,9 +6,9 @@ public class Console {
     public Console(Interpreter interpreter){
         properties = new Block(null);
         interpreter.addProperty(properties, "visible", "bool", false);
-        interpreter.addProperty(properties, "input", "string", "");
-        interpreter.addProperty(properties, "output", "string", "");
-        interpreter.addProperty(properties, "entered", "string", ""); // True if user just pressed enter
+        interpreter.addProperty(properties, "input", "str", "");
+        interpreter.addProperty(properties, "output", "str", "");
+        interpreter.addProperty(properties, "entered", "str", ""); // True if user just pressed enter
     }
 
     public boolean isVisible(){

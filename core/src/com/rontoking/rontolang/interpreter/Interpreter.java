@@ -16,7 +16,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.rontoking.rontolang.interpreter.objects.RontoCamera2D;
+import com.rontoking.rontolang.interpreter.objects.*;
 import com.rontoking.rontolang.interpreter.objects.networking.RontoClient;
 import com.rontoking.rontolang.interpreter.objects.networking.RontoPacket;
 import com.rontoking.rontolang.interpreter.objects.networking.RontoServer;
@@ -420,5 +420,19 @@ public class Interpreter {
             shapeRenderer.begin(shapeType);
         }
         batchState = BatchState.Shapes;
+    }
+
+    public ObjectMap<String, Variable> getRontoObjectProperties(String name){
+        if(name.equals("camera2d"))
+            return new RontoCamera2D(this).getProperties();
+        if(name.equals("color"))
+            return new RontoColor(Color.WHITE, this).getProperties();
+        if(name.equals("point"))
+            return new RontoPoint(0, 0, this).getProperties();
+        if(name.equals("rect"))
+            return new RontoRect(0, 0, 0, 0, this).getProperties();
+        if(name.equals("sprite"))
+            return new RontoSprite(new Texture(IMAGE_PATH + "rontolang.png"), this).getProperties();
+        return null;
     }
 }

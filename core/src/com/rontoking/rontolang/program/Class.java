@@ -3,6 +3,7 @@ package com.rontoking.rontolang.program;
 import com.badlogic.gdx.utils.Array;
 import com.rontoking.rontolang.interpreter.ErrorHandler;
 import com.rontoking.rontolang.interpreter.Interpreter;
+import com.rontoking.rontolang.interpreter.objects.RontoCamera2D;
 
 public class Class {
     public String name;

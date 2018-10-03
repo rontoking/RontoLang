@@ -274,6 +274,10 @@ public class Expression {
     }
 
     public Instruction getInstruction(){
+        return getInstruction(false);
+    }
+
+    public Instruction getInstruction(boolean isParam){
         Array<Instruction> args = new Array<Instruction>();
         if(Instruction.isInstruction(type)){
             for(int i = 0; i < arguments.size; i++)
@@ -444,6 +448,13 @@ public class Expression {
         } else if ("else".equals(type)) {
             args.add(arguments.get(0).getInstruction());
             return new Instruction(Instruction.Type.Else, args);
+        } else if ("enum".equals(type)) {
+            args.add(arguments.get(0).getInstruction());
+            return new Instruction(Instruction.Type.Enum, args);
+        } else if ("func".equals(type)) {
+            args.add(arguments.get(0).getInstruction(true));
+            args.add(arguments.get(1).getInstruction());
+            return new Instruction(Instruction.Type.Func, args);
         } else if ("else if".equals(type)) {
             args.add(arguments.get(0).getInstruction());
             args.add(arguments.get(1).getInstruction());
@@ -471,6 +482,8 @@ public class Expression {
                 return new Instruction(Instruction.Type.Raw_Value, parsedNum(data)); // Number
             }
             if (arguments.size == 1) {
+                if(isParam)
+                    return new Instruction(Instruction.Type.List, arguments.get(0).data);
                 return arguments.get(0).getInstruction();
             }
             for (int i = 0; i < arguments.size; i++) {

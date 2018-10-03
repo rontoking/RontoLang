@@ -127,7 +127,7 @@ public class Parser {
         }
     }
 
-    private static Array<Parameter> parseParams(String className, String funcName, String block){
+    public static Array<Parameter> parseParams(String className, String funcName, String block){
         Array<Parameter> params = new Array<Parameter>();
         String[] parts = block.split(",");
         for(int i = 0; i < parts.length; i++){

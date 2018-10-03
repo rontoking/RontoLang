@@ -153,11 +153,19 @@ public class Marker {
         boolean insideString = false;
         char strBound = ' ';
         boolean insideNumber = false;
+        boolean insideParams = false;
         if (isLocal)
             memory.add("("); // The beginning of the first statement.
         while (!isAtCodeEnd()) {
             if (insideString) {
-                if (isStringStartOrEnd(insideString, strBound)) {
+                if(insideParams && mark() == ')'){
+                    insideParams = false;
+                    insideString = false;
+                    strBound = mark();
+                    memory.add( code.substring(start, end) + "\""); // Add the params as a string.
+                    memory.set(memory.size - 1, "\"" + memory.get(memory.size - 1).trim().substring(1));
+                }
+                else if (isStringStartOrEnd(insideString, strBound)) {
                     insideString = false;
                     strBound = mark();
                     memory.add(code.substring(start, end) + "\"");
@@ -176,8 +184,14 @@ public class Marker {
                     }
                     else {
                         memory.add(varName);
-                        if (varName.equals("if") || varName.equals("else") || varName.equals("while") || varName.equals("repeat") || varName.equals("switch") || varName.equals("case") || varName.equals("for") || varName.equals("foreach") || varName.equals("when") || varName.equals("whenever") || varName.equals("thread") || varName.equals("runLater")) // For instructions with { } blocks.
+                        if (varName.equals("if") || varName.equals("else") || varName.equals("while") || varName.equals("repeat") || varName.equals("switch") || varName.equals("case") || varName.equals("for") || varName.equals("foreach") || varName.equals("when") || varName.equals("whenever") || varName.equals("thread") || varName.equals("runLater") || varName.equals("enum")) // For instructions with { } blocks.
                             memory.add("(");
+                        else if(varName.equals("func")){
+                            memory.add("(");
+                            start = end;
+                            insideParams = true;
+                            insideString = true;
+                        }
                     }
                     end--; // This is so that the next loop doesn't skip the character right after the word.
                 } else if (isStringStartOrEnd(insideString, strBound)) { // The beginning of a string.
@@ -200,6 +214,24 @@ public class Marker {
                     start = end;
                 } else {
                     switch (mark()) {
+                        case '[':
+                            memory.add("[");
+                            memory.add("(");
+                            if(code.substring(end + 1).length() > 1 && code.substring(end + 1).trim().charAt(0) == ']') { // Replace empty [] with [1].
+                                memory.add("1");
+                            }
+                            break;
+                        case ']':
+                            if(code.substring(end + 1).length() > 1 && code.substring(end + 1).trim().charAt(0) == '['){ // Replace chained []s with commas ('][' -> ',').
+                                memory.add(")");
+                                memory.add("(");
+                                while (mark() != '[')
+                                    end++;
+                            }else {
+                                memory.add(")");
+                                memory.add("]");
+                            }
+                            break;
                         case '(':
                             memory.add("(");
                             memory.add("(");

@@ -24,9 +24,11 @@ import com.rontoking.rontolang.interpreter.objects.networking.RontoPacket;
 import com.rontoking.rontolang.interpreter.objects.networking.RontoServer;
 import com.rontoking.rontolang.interpreter.objects.networking.RontoSocket;
 import com.rontoking.rontolang.parser.Expression;
+import com.rontoking.rontolang.parser.Parser;
 import com.rontoking.rontolang.program.Class;
 import com.rontoking.rontolang.program.Function;
 import com.rontoking.rontolang.program.Instruction;
+import com.rontoking.rontolang.program.Parameter;
 import com.rontoking.rontolang.rontoui.RontoUI;
 import javafx.application.Platform;
 
@@ -36,9 +38,10 @@ public class Executor {
     public static Reference executeBlock(Array<Instruction> instructions, Interpreter interpreter, Class ownerClass, Function function, Reference[] params, Block instanceBlock){
         interpreter.addBlock(function);
         Reference ret = null;
-        if(function != null)
-            for(int i = 0; i < function.parameters.size; i++) // Adding the parameters to the block.
+        if(function != null) {
+            for (int i = 0; i < function.parameters.size; i++) // Adding the parameters to the block.
                 interpreter.stackTop().set(function.parameters.get(i).name, new Variable(function.parameters.get(i).type, params[i], function.parameters.get(i).isReference));
+        }
         for(int i = 0; i < instructions.size; i++){
             switch (instructions.get(i).type){
                 case If:
@@ -276,12 +279,10 @@ public class Executor {
             case Pair:
                 return new Reference(new Pair(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock), execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock)));
             case Element:
+                Object[] args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 Object par = execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value;
                 if (par instanceof Array) {
-                    if (instruction.arguments.size == 1)
-                        return ((Array<Reference>) par).get(0);
-                    else
-                        return ((Array<Reference>) par).get((int) Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock)));
+                    return getElement((Array<Reference>) par, args, 1);
                 } else if (par instanceof ObjectMap) {
                     return ((ObjectMap<Object, Reference>) par).get((int) Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock)));
                 } else if (par instanceof String) {
@@ -404,6 +405,11 @@ public class Executor {
                     }
                 }
                 break;
+            case Func:
+                Function function = new Function(null);
+                function.parameters = Parser.parseParams(ownerClass.name, function.name, instruction.arguments.get(0).data.toString());
+                function.code = instruction.arguments.get(1).arguments;
+                return new Reference(function);
             case Switch:
                 Reference switchArg = execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock);
                 Array<Instruction> cases = instruction.arguments.get(1).arguments;
@@ -617,7 +623,7 @@ public class Executor {
             case Empty:
                 return new Reference(new Array<Reference>());
             case Img:
-                Object[] args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
+                args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 if (args[0] instanceof FileHandle)
                     return new Reference(interpreter.getTexture((FileHandle) args[0]));
                 return new Reference(interpreter.getTexture(Gdx.files.internal(Interpreter.IMAGE_PATH + args[0].toString())));
@@ -687,9 +693,9 @@ public class Executor {
                 else
                     return new Reference(new RontoColor(args[0], args[1], args[2], args[3], interpreter));
             case Draw:
+                interpreter.setToSpriteState();
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 if (args[0] instanceof BitmapFont || args[0] instanceof String) { // Drawing text.
-                    interpreter.setToSpriteState();
                     if (args.length == 1)// text
                         interpreter.defaultFont.draw(interpreter.spriteBatch, args[0].toString(), 0, 0 + RontoUI.getTextHeight(args[0].toString(), interpreter.defaultFont));
                     else if (args.length == 3)// text, x, y
@@ -813,7 +819,7 @@ public class Executor {
                     return new Reference(SimplexNoise.sample(Variable.getNum(args[0]), Variable.getNum(args[1]), Variable.getNum(args[2]), Variable.getNum(args[3])));
             case Path:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
-                return Variable.getList(Pathfinding.path((RontoPoint) args[0], (RontoPoint) args[1], (int) Variable.getNum(args[2]), (int) Variable.getNum(args[3]), interpreter.getPathFunc(args[3].toString(), ownerClass), interpreter, ownerClass, instanceBlock));
+                return Variable.getList(Pathfinding.path((RontoPoint) args[0], (RontoPoint) args[1], (int) Variable.getNum(args[2]), (int) Variable.getNum(args[3]), (Function)args[4], interpreter, ownerClass, instanceBlock));
             case Circle:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 interpreter.setToShapeState();
@@ -877,7 +883,7 @@ public class Executor {
     }
 
     private static Reference memberOfNewValue(Reference parent, Instruction child, Interpreter interpreter, Class ownerClass, Block instanceBlock) {
-        if (parent.value instanceof Instance) {
+        if (parent.value instanceof Instance) { // TODO: If the parent class is a RontoObject, check if that RontoObject can execute the member.
             return execute(child, interpreter, ((Instance) parent.value).baseClass, ((Instance) parent.value).properties, true, true);
         }
         if (child.type == Instruction.Type.Function && child.arguments.size == 2 && child.arguments.get(1).type == Instruction.Type.Empty) { // Change functions with no arguments into simple gets, ex: dog.bark() -> dog.bark
@@ -917,6 +923,8 @@ public class Executor {
             return MusicMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof BitmapFont) {
             return FontMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
+        } else if (parent.value instanceof Function) {
+            return FunctionMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof FileHandle) {
             return FileMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof RontoServer) {
@@ -934,5 +942,12 @@ public class Executor {
         }
         ErrorHandler.throwMemberError(true);
         return null;
+    }
+
+    private static Reference getElement(Array<Reference> array, Object[] args, int index){
+        if(index == args.length - 1){
+            return array.get((int)Variable.getNum(args[index]));
+        }
+        return getElement((Array<Reference>)array.get((int)Variable.getNum(args[index])).value, args, index + 1);
     }
 }

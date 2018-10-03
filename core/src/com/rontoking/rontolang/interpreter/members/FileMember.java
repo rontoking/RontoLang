@@ -21,7 +21,7 @@ public class FileMember {
                 return new Reference(((FileHandle) parent.value).extension());
             else if (child.data.equals("bytes") || child.data.equals("data"))
                 return Variable.getList(((FileHandle) parent.value).readBytes());
-            else if (child.data.equals("read") || child.data.equals("text") || child.data.equals("string") || child.data.equals("str"))
+            else if (child.data.equals("read") || child.data.equals("text") || child.data.equals("str") || child.data.equals("str"))
                 return new Reference(((FileHandle) parent.value).readString());
             else if (child.data.equals("isFolder") || child.data.equals("isDir") || child.data.equals("isDirectory"))
                 return new Reference(((FileHandle) parent.value).isDirectory());

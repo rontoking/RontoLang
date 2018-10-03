@@ -9,7 +9,7 @@ public class Instruction {
         SetVariable, GetVariable,
         Function,
         Sum, Difference, Product, Quotient, Remainder, Power, Member,
-        If, Else, Else_If, While, Repeat, Switch, Case, For, Foreach, When, Whenever, Thread,
+        If, Else, Else_If, While, Repeat, Switch, Case, For, Foreach, When, Whenever, Thread, Func, Enum,
         Equal, Not_Equal, Not, Greater, Lesser, Greater_Or_Equal, Lesser_Or_Equal, And, Or, Xor,
         Comment,
         Exec, Wait, TypeOf,

@@ -1,5 +1,7 @@
 package com.rontoking.rontolang.interpreter;
 
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.rontoking.rontolang.program.Class;
 
 public class Instance {
@@ -14,10 +16,15 @@ public class Instance {
                     Executor.execute(baseClass.objectProperties.get(i).value, interpreter, ownerClass, properties)));
         }
         if(baseClass.parentClass != null){ // Inheriting the parent's members.
-            Class parentClass = interpreter.getClass(baseClass.parentClass);
-            for(int i = 0; i < parentClass.objectProperties.size; i++){
-                this.properties.set(parentClass.objectProperties.get(i).name, new Variable(parentClass.objectProperties.get(i).type, parentClass.objectProperties.get(i).access,
-                        Executor.execute(parentClass.objectProperties.get(i).value, interpreter, ownerClass, properties)));
+            ObjectMap<String, Variable> rontoObjectProperties = interpreter.getRontoObjectProperties(baseClass.parentClass);
+            if(rontoObjectProperties == null) {
+                Class parentClass = interpreter.getClass(baseClass.parentClass);
+                for (int i = 0; i < parentClass.objectProperties.size; i++) {
+                    this.properties.set(parentClass.objectProperties.get(i).name, new Variable(parentClass.objectProperties.get(i).type, parentClass.objectProperties.get(i).access,
+                            Executor.execute(parentClass.objectProperties.get(i).value, interpreter, ownerClass, properties)));
+                }
+            }else{
+                this.properties.variables.putAll(rontoObjectProperties);
             }
         }
     }

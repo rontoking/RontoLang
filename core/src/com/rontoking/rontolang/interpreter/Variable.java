@@ -86,7 +86,7 @@ public class Variable {
             return 0f;
         if(type.equals("double"))
             return 0d;
-        if(type.equals("string"))
+        if(type.equals("str"))
             return "";
         return null;
     }
@@ -105,7 +105,7 @@ public class Variable {
         if(value instanceof Double)
             return "double";
         if(value instanceof String)
-            return "string";
+            return "str";
         if(value instanceof Texture)
             return "img";
         if(value instanceof Sound)
@@ -134,6 +134,8 @@ public class Variable {
             return "color";
         if(value instanceof RontoPoint)
             return "point";
+        if(value instanceof RontoEnum)
+            return "enum";
         if(value instanceof Array){
             Array<Reference> array = (Array<Reference>)value;
             int dimensions = 1;
@@ -488,7 +490,7 @@ public class Variable {
             } else if (type.equals("double")) {
                 if(!(value instanceof Double) && !(value instanceof Float) && !(value instanceof Integer) && !(value instanceof Byte))
                     ErrorHandler.throwTypeValueError(name, type, value);
-            } else if (type.equals("string")) {
+            } else if (type.equals("str")) {
                 String x = value.toString();
             } else if (type.equals("list")) {
                 Array<Object> x = (Array<Object>) value;
@@ -516,6 +518,8 @@ public class Variable {
                 FileHandle x = (FileHandle) value;
             }else if (type.equals("rect")) {
                 RontoRect x = (RontoRect) value;
+            }else if (type.equals("enum")) {
+                RontoEnum x = (RontoEnum) value;
             }else if (type.equals("sprite")) {
                 RontoSprite x = (RontoSprite) value;
             }else if (type.equals("color")) {
@@ -535,6 +539,11 @@ public class Variable {
     private static void checkArrayType(Array<Reference> array, int dimensions, String name, Instruction baseType, Interpreter interpreter, Class ownerClass, Block instanceBlock){
         if(dimensions > 0){
             for(int i = 0; i < array.size; i++){
+                if(!(array.get(i).value instanceof Array)) { // For lists with one element that are being treated like non-lists.
+                    Array<Reference> newValue = new Array<Reference>();
+                    newValue.add(array.get(i));
+                    array.set(i, new Reference(newValue));
+                }
                 checkArrayType((Array<Reference>)(array.get(i)).value, dimensions - 1, name, baseType, interpreter, ownerClass, instanceBlock);
             }
         }else{

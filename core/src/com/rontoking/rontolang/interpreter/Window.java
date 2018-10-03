@@ -15,7 +15,7 @@ public class Window {
         isDecorated = true;
         interpreter.addProperty(properties, "width", "int", Gdx.graphics.getWidth());
         interpreter.addProperty(properties, "height", "int", Gdx.graphics.getHeight());
-        interpreter.addProperty(properties, "title", "string", lastTitle);
+        interpreter.addProperty(properties, "title", "str", lastTitle);
         interpreter.addProperty(properties, "fullscreen", "bool", false);
         interpreter.addProperty(properties, "resizable", "bool", isResizable);
         interpreter.addProperty(properties, "vsync", "bool", vSyncOn);
