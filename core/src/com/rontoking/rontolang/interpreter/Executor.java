@@ -178,6 +178,11 @@ public class Executor {
                 } else if (name.equals("pointShapes") || name.equals("pointshapes")) {
                     interpreter.setToShapeState(ShapeRenderer.ShapeType.Point);
                     return null;
+                } else if (name.equals("exit") || name.equals("quit")) {
+                    Gdx.app.exit();
+                    return null;
+                } else if (name.equals("clipboard")) {
+                    return interpreter.clipboardRef;
                 }
                 Variable var = interpreter.var(name, instanceBlock, isMemberInstruction, mustBePublic);
                 if (var == null)

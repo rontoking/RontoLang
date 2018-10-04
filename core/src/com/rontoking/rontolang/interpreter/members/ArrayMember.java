@@ -244,6 +244,19 @@ public class ArrayMember {
                 }
                 interpreter.removeBlock();
                 return new Reference(result);
+            }else if(funcName.equals("size") || funcName.equals("count") || funcName.equals("num") || funcName.equals("length") || funcName.equals("len") || funcName.equals("n")){
+                String varName = child.arguments.get(1).data.toString();
+                Array<Reference> arr = (Array) parent.value;
+                int result = 0;
+                interpreter.addBlock(null);
+                for(int i = 0; i < arr.size; i++){
+                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
+                        result++;
+                    }
+                }
+                interpreter.removeBlock();
+                return new Reference(result);
             }else if(funcName.equals("removeAll")){
                 String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;

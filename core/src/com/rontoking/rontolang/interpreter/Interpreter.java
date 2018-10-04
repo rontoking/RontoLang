@@ -54,7 +54,7 @@ public class Interpreter {
     public BitmapFont defaultFont;
     public Console console;
     public Window window;
-    public boolean consoleEnteredNextFrame;
+    private boolean consoleEnteredNextFrame;
 
     private Array<Texture> textures;
     private Array<BitmapFont> fonts;
@@ -66,10 +66,12 @@ public class Interpreter {
     public RontoSocket socket;
     public RontoPacket packet;
     public SocketState socketState;
-    public BatchState batchState;
+    private BatchState batchState;
     public Preferences preferences;
 
     public RontoCamera2D camera2d;
+    private String clipboard;
+    public Reference clipboardRef;
 
     public enum SocketState{
         None, Client, Server
@@ -173,6 +175,8 @@ public class Interpreter {
 
     public boolean runMain(){
         console = new Console(this);
+        clipboard = Gdx.app.getClipboard().getContents();
+        clipboardRef = new Reference(clipboard);
         window = new Window(this);
         consoleEnteredNextFrame = false;
         consoleOutput.text = "";
@@ -195,6 +199,13 @@ public class Interpreter {
     }
 
     public void runUpdate(){
+        if(!clipboardRef.value.equals(clipboard)) { // Clipboard has been altered by RontoLang.
+            clipboard = clipboardRef.value.toString();
+            Gdx.app.getClipboard().setContents(clipboard);
+        }else if(!Gdx.app.getClipboard().getContents().equals(clipboard)) { // Clipboard has been altered by something else.
+            clipboard = Gdx.app.getClipboard().getContents();
+            clipboardRef.value = clipboard;
+        }
         console.setEntered(false);
         if(consoleEnteredNextFrame)
             console.setEntered(true);
