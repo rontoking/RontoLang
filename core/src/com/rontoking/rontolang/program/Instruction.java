@@ -9,7 +9,7 @@ public class Instruction {
         SetVariable, GetVariable,
         Function,
         Sum, Difference, Product, Quotient, Remainder, Power, Member,
-        If, Else, Else_If, While, Repeat, Switch, Case, For, Foreach, When, Whenever, Thread, Func, Enum,
+        If, Else, Else_If, While, Repeat, Switch, Case, For, Foreach, When, Whenever, Thread, Func, Expr, Enum,
         Equal, Not_Equal, Not, Greater, Lesser, Greater_Or_Equal, Lesser_Or_Equal, And, Or, Xor,
         Comment,
         Exec, Wait, TypeOf,
@@ -53,21 +53,22 @@ public class Instruction {
     public static String codeToStr(Array<Instruction> code){
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < code.size; i++){
-            stringBuilder.append(code.get(i).toStr());
+            stringBuilder.append(code.get(i).toString());
             stringBuilder.append(";");
             stringBuilder.append("\n");
         }
         return stringBuilder.toString();
     }
 
-    public String toStr(){
+    @Override
+    public String toString(){
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(type.name());
         stringBuilder.append("(");
         for(int i = 0; i < arguments.size; i++) {
             if (i != 0)
                 stringBuilder.append(", ");
-            stringBuilder.append(arguments.get(i).toStr());
+            stringBuilder.append(arguments.get(i).toString());
         }
         if(data != null)
             stringBuilder.append(data);

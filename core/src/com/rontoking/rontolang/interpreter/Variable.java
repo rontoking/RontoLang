@@ -21,7 +21,6 @@ import com.rontoking.rontolang.program.Function;
 import com.rontoking.rontolang.program.Instruction;
 
 import java.io.*;
-import java.util.ArrayList;
 
 public class Variable {
     public String type;
@@ -136,6 +135,8 @@ public class Variable {
             return "point";
         if(value instanceof RontoEnum)
             return "enum";
+        if(value instanceof Instruction)
+            return "expr";
         if(value instanceof Array){
             Array<Reference> array = (Array<Reference>)value;
             int dimensions = 1;
@@ -383,9 +384,10 @@ public class Variable {
         return sb.toString();
     }
 
-    public static void checkIfTypeAndValueMatch(String name, String type, Object value, Interpreter interpreter){
+    public static void checkIfTypeAndValueMatch(String name, String type, Reference reference, Interpreter interpreter){
+        Object value = reference.value;
         if(value instanceof Reference){
-            checkIfTypeAndValueMatch(name, type, ((Reference) value).value, interpreter);
+            checkIfTypeAndValueMatch(name, type, ((Reference) value), interpreter);
             return;
         }
         if(type.equals("void"))
@@ -422,21 +424,22 @@ public class Variable {
                     ObjectMap<Object, Reference> map = (ObjectMap<Object, Reference>) value;
                     Array<Object> keys = map.keys().toArray();
                     for(int i = 0; i < keys.size; i++){
-                        checkIfTypeAndValueMatch(name, baseType, keys.get(i), interpreter);
-                        checkIfTypeAndValueMatch(name, argument, map.get(keys.get(i)).value, interpreter);
+                        checkIfTypeAndValueMatch(name, baseType, new Reference(keys.get(i)), interpreter);
+                        checkIfTypeAndValueMatch(name, argument, map.get(keys.get(i)), interpreter);
                     }
                 }catch (Exception e){
                     ErrorHandler.throwTypeValueError(name, type, value);
                 }
             }
         }else{
-            checkIfSimpleTypeAndValueMatch(name, type, value, interpreter);
+            checkIfSimpleTypeAndValueMatch(name, type, reference, interpreter);
         }
     }
 
-    public static void checkIfTypeAndValueMatch(String name, Instruction type, Object value, Interpreter interpreter, Class ownerClass, Block instanceBlock){
+    public static void checkIfTypeAndValueMatch(String name, Instruction type, Reference reference, Interpreter interpreter, Class ownerClass, Block instanceBlock){
+        Object value = reference.value;
         if(value instanceof Reference){
-            checkIfTypeAndValueMatch(name, type, ((Reference) value).value, interpreter, ownerClass, instanceBlock);
+            checkIfTypeAndValueMatch(name, type, ((Reference) value), interpreter, ownerClass, instanceBlock);
             return;
         }
         if(type.type == Instruction.Type.Element){
@@ -458,8 +461,8 @@ public class Variable {
                     ObjectMap<Object, Reference> map = (ObjectMap<Object, Reference>) value;
                     Array<Object> keys = map.keys().toArray();
                     for(int i = 0; i < keys.size; i++){
-                        checkIfTypeAndValueMatch(name, type.arguments.get(0), keys.get(i), interpreter, ownerClass, instanceBlock);
-                        checkIfTypeAndValueMatch(name, type.arguments.get(1), map.get(keys.get(i)).value, interpreter, ownerClass, instanceBlock);
+                        checkIfTypeAndValueMatch(name, type.arguments.get(0), new Reference(keys.get(i)), interpreter, ownerClass, instanceBlock);
+                        checkIfTypeAndValueMatch(name, type.arguments.get(1), map.get(keys.get(i)), interpreter, ownerClass, instanceBlock);
                     }
                 }catch (Exception e){
                     ErrorHandler.throwTypeValueError(name, Variable.typeToStr(type), value);
@@ -468,11 +471,12 @@ public class Variable {
                 ErrorHandler.throwVarTypeError(type.type.name());
             }
         }else{
-            checkIfSimpleTypeAndValueMatch(name,  type.data.toString(), value, interpreter);
+            checkIfSimpleTypeAndValueMatch(name,  type.data.toString(), reference, interpreter);
         }
     }
 
-    private static void checkIfSimpleTypeAndValueMatch(String name, String type, Object value, Interpreter interpreter){
+    private static void checkIfSimpleTypeAndValueMatch(String name, String type, Reference reference, Interpreter interpreter){
+        Object value = reference.value;
         try {
             if (type.equals("byte")) {
                 byte x = (Byte) value;
@@ -495,7 +499,16 @@ public class Variable {
             } else if (type.equals("list")) {
                 Array<Object> x = (Array<Object>) value;
             } else if (type.equals("map")) {
-                ObjectMap<Object, Reference> x = (ObjectMap<Object, Reference>) value;
+                if(value instanceof Array){ // Allows the use of 'map x = ()' to make an empty map by using an empty list.
+                    Array arr = (Array<Reference>)value;
+                    if(arr.size > 0){
+                        ObjectMap<Object, Reference> x = (ObjectMap<Object, Reference>) value;
+                    }else{
+                        reference = new Reference(new ObjectMap<Object, Reference>());
+                    }
+                }else {
+                    ObjectMap<Object, Reference> x = (ObjectMap<Object, Reference>) value;
+                }
             }else if (type.equals("img")) {
                 Texture x = (Texture) value;
             }else if (type.equals("sound")) {
@@ -520,6 +533,8 @@ public class Variable {
                 RontoRect x = (RontoRect) value;
             }else if (type.equals("enum")) {
                 RontoEnum x = (RontoEnum) value;
+            }else if (type.equals("expr")) {
+                Instruction x = (Instruction) value;
             }else if (type.equals("sprite")) {
                 RontoSprite x = (RontoSprite) value;
             }else if (type.equals("color")) {
@@ -548,7 +563,7 @@ public class Variable {
             }
         }else{
             for(int i = 0; i < array.size; i++){ // Finally check the base type.
-                checkIfTypeAndValueMatch(name, baseType, array.get(i).value, interpreter, ownerClass, instanceBlock);
+                checkIfTypeAndValueMatch(name, baseType, array.get(i), interpreter, ownerClass, instanceBlock);
             }
         }
     }
@@ -560,7 +575,7 @@ public class Variable {
             }
         }else{
             for(int i = 0; i < array.size; i++){ // Finally check the base type.
-                checkIfTypeAndValueMatch(name, baseType, array.get(i).value, interpreter);
+                checkIfTypeAndValueMatch(name, baseType, array.get(i), interpreter);
             }
         }
     }

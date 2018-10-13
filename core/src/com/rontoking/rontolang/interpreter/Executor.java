@@ -77,7 +77,7 @@ public class Executor {
                                 else
                                     ErrorHandler.throwTypeValueError(function.name + "()", function.type, "NULL");
                             }
-                            Variable.checkIfTypeAndValueMatch(function.name + "()", function.type, ret.value, interpreter);
+                            Variable.checkIfTypeAndValueMatch(function.name + "()", function.type, ret, interpreter);
                             return ret;
                         }
                     }else if(instructions.get(i).type == Instruction.Type.GetVariable && instructions.get(i).data.equals("break")){
@@ -103,7 +103,7 @@ public class Executor {
                             else
                                 ErrorHandler.throwTypeValueError(function.name + "()", function.type, "NULL");
                         }
-                        Variable.checkIfTypeAndValueMatch(function.name + "()", function.type, ref.value, interpreter);
+                        Variable.checkIfTypeAndValueMatch(function.name + "()", function.type, ref, interpreter);
                         return ref;
                     }
                     return ret; // Continues return chain until the first function is found.
@@ -201,7 +201,7 @@ public class Executor {
                         Reference ref = execute(instruction.arguments.get(2), interpreter, ownerClass, instanceBlock);
 
                         if (instruction.arguments.get(0).type == Instruction.Type.Element) { // Strict list or map type.
-                            Variable.checkIfTypeAndValueMatch(name, instruction.arguments.get(0), ref.value, interpreter, ownerClass, instanceBlock);
+                            Variable.checkIfTypeAndValueMatch(name, instruction.arguments.get(0), ref, interpreter, ownerClass, instanceBlock);
                             interpreter.stackTop().set(name, new Variable(Variable.typeToStr(instruction.arguments.get(0)), ref, false));
                         } else {
                             String type = instruction.arguments.get(0).data.toString();
@@ -223,7 +223,7 @@ public class Executor {
                                     }
                                 }
                             } else { // Type specified.
-                                Variable.checkIfTypeAndValueMatch(name, instruction.arguments.get(0), ref.value, interpreter, ownerClass, instanceBlock);
+                                Variable.checkIfTypeAndValueMatch(name, instruction.arguments.get(0), ref, interpreter, ownerClass, instanceBlock);
                                 interpreter.stackTop().set(name, new Variable(type, ref, false));
                             }
                         }
@@ -270,15 +270,19 @@ public class Executor {
                     }
                 } else { // It's a list.
                     Array<Reference> array = new Array<Reference>();
+                    if(instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
+                        return new Reference(array);
                     for (int i = 0; i < instruction.arguments.size; i++)
-                        array.add(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock));
+                        array.add(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).copy());
                     return new Reference(array);
                 }
             case Map:
                 ObjectMap<Object, Reference> map = new ObjectMap<Object, Reference>();
+                if(instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
+                    return new Reference(map);
                 for (int i = 0; i < instruction.arguments.size; i++) {
                     Pair pair = (Pair) execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).value;
-                    map.put(pair.a.value, pair.b);
+                    map.put(pair.a.value, pair.b.copy());
                 }
                 return new Reference(map);
             case Pair:
@@ -289,7 +293,11 @@ public class Executor {
                 if (par instanceof Array) {
                     return getElement((Array<Reference>) par, args, 1);
                 } else if (par instanceof ObjectMap) {
-                    return ((ObjectMap<Object, Reference>) par).get((int) Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock)));
+                    map = (ObjectMap<Object, Reference>) par;
+                    Object key = execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value;
+                    if(!map.containsKey(key))
+                        map.put(key, new Reference(null));
+                    return ((ObjectMap<Object, Reference>) par).get(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value);
                 } else if (par instanceof String) {
                     return new Reference(par.toString().charAt((int) Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock))));
                 } else {
@@ -415,6 +423,8 @@ public class Executor {
                 function.parameters = Parser.parseParams(ownerClass.name, function.name, instruction.arguments.get(0).data.toString());
                 function.code = instruction.arguments.get(1).arguments;
                 return new Reference(function);
+            case Expr:
+                return new Reference(instruction.arguments.get(0));
             case Switch:
                 Reference switchArg = execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock);
                 Array<Instruction> cases = instruction.arguments.get(1).arguments;
@@ -900,6 +910,8 @@ public class Executor {
             return Variable.copyOf(parent.value);
         } else if (child.type == Instruction.Type.GetVariable && (child.data.equals("type"))) {
             return new Reference(Variable.typeOf(parent.value));
+        } else if (child.type == Instruction.Type.GetVariable && (child.data.equals("str") || child.data.equals("toStr") || child.data.equals("toString"))) {
+            return new Reference(parent.value.toString());
         } else if (child.type == Instruction.Type.GetVariable && (child.data.equals("print"))) {
             System.out.print(parent.value.toString());
             interpreter.console.print(parent.value.toString(), interpreter);
@@ -922,6 +934,8 @@ public class Executor {
             return CharMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Texture) {
             return TextureMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
+        } else if (parent.value instanceof Instruction) {
+            return InstructionMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Sound) {
             return SoundMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Music) {

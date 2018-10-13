@@ -13,7 +13,7 @@ import com.rontoking.rontolang.program.Class;
 import com.rontoking.rontolang.program.Instruction;
 
 public class RontoCamera2D extends RontoObject{
-    OrthographicCamera camera;
+    public OrthographicCamera camera;
 
     public RontoCamera2D(Interpreter interpreter){
         super();

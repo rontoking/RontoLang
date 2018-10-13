@@ -125,7 +125,10 @@ public class Interpreter {
         server = new RontoServer();
         socket = new RontoSocket();
         client = new RontoClient();
-        camera2d = null;
+        camera2d = new RontoCamera2D(this);
+        camera2d.camera.position.set(-Gdx.graphics.getWidth() / 2, -Gdx.graphics.getHeight() / 2, 0);
+        camera2d.setBatchMatrix(spriteBatch);
+        camera2d.setBatchMatrix(shapeRenderer);
     }
 
     private void loadFont(){
@@ -235,7 +238,7 @@ public class Interpreter {
         Block block = new Block(null);
         for(int i = 0; i <  c.classProperties.size; i++) {
             Object value = Executor.execute(c.classProperties.get(i).value, this, c, true, null, false, false).value;
-            Variable.checkIfTypeAndValueMatch(c.classProperties.get(i).name, c.classProperties.get(i).type, value, this);
+            Variable.checkIfTypeAndValueMatch(c.classProperties.get(i).name, c.classProperties.get(i).type, new Reference(value), this);
             block.set(c.classProperties.get(i).name, new Variable(c.classProperties.get(i).type, c.classProperties.get(i).access, value));
             if(value == ErrorHandler.Errors.MISSING_PROPERTY_DEPENDENCY) // Properties that need further dependencies to initialize.
                 propertyNum++;
@@ -345,7 +348,7 @@ public class Interpreter {
     }
 
     public void addProperty(Block properties, String name, String type, Object value){
-        Variable.checkIfTypeAndValueMatch(name, type, value, this);
+        Variable.checkIfTypeAndValueMatch(name, type, new Reference(value), this);
         properties.set(name, new Variable(type, Function.Access.Public, value));
     }
 

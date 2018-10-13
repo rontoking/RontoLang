@@ -44,7 +44,7 @@ public class ArrayMember {
         } else if (child.type == Instruction.Type.Function) {
             String funcName = child.arguments.get(0).data.toString();
             if (funcName.equals("add")) {
-                ((Array) parent.value).add(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock));
+                ((Array) parent.value).add(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock).copy());
                 return null;
             } else if (funcName.equals("remove")) {
                 ((Array) parent.value).removeIndex((int) Variable.getNum(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock)));
@@ -239,7 +239,7 @@ public class ArrayMember {
                 for(int i = 0; i < arr.size; i++){
                     interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
                     if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        result.add(arr.get(i));
+                        result.add(arr.get(i).copy());
                     }
                 }
                 interpreter.removeBlock();
@@ -276,12 +276,12 @@ public class ArrayMember {
                 Array<Reference> result = new Array<Reference>();
                 if(child.arguments.size == 2){
                     for(int i = (int)Variable.getNum(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock)); i < arr.size; i++){
-                        result.add(arr.get(i));
+                        result.add(arr.get(i).copy());
                     }
                     return new Reference(result);
                 }else{
                     for(int i = (int)Variable.getNum(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock)); i < (int)Variable.getNum(Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock)); i++){
-                        result.add(arr.get(i));
+                        result.add(arr.get(i).copy());
                     }
                     return new Reference(result);
                 }

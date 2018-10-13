@@ -18,4 +18,8 @@ public class Reference { // Used for making primitive types mutable.
     public String toString(){
         return value.toString();
     }
+
+    public Reference copy(){
+        return new Reference(value);
+    }
 }

@@ -1,3 +1,7 @@
+- Time type and global time var that gives current time and way to do arithmetic with time
 - 3D Camera
 - 3D Shapes (minecraft blocks ;d)
 - UI
+
+BUG
+-Fix problem with 'map x = ()' assigning an array to x instead of an empty map.

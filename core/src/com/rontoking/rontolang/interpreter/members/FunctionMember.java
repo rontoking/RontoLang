@@ -12,7 +12,7 @@ public class FunctionMember {
     public static Reference getMemberValue(Reference parent, Instruction child, Interpreter interpreter, Class ownerClass, Block instanceBlock){
         if (child.type == Instruction.Type.Function) {
             String funcName = child.arguments.get(0).data.toString();
-            if (funcName.equals("exec") || funcName.equals("run")) {
+            if (funcName.equals("run")) {
                 Function func = (Function)parent.value;
                 Reference[] params = new Reference[child.arguments.size - 1];
                 for(int i = 0; i < params.length; i++){
