@@ -49,7 +49,7 @@ public class ArrayMember {
             } else if (funcName.equals("remove")) {
                 ((Array) parent.value).removeIndex((int) Variable.getNum(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock)));
                 return null;
-            } else if (funcName.equals("join")) {
+            }else if (funcName.equals("join")) {
                 return new Reference(Variable.join(((Array) parent.value), Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock).value.toString()));
             } else if (funcName.equals("insert")) {
                 ((Array) parent.value).insert((int) Variable.getNum(Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock)), Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock));
@@ -76,18 +76,26 @@ public class ArrayMember {
                     return new Reference(true);
                 }
                 return new Reference(false);
-            }else if(funcName.equals("any")){
-                String varName = child.arguments.get(1).data.toString();
-                Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        return new Reference(true);
+            }else if(funcName.equals("any") || funcName.equals("has") || funcName.equals("contains")){
+                Array<Reference> arr = (Array<Reference>) parent.value;
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for(int i = 0; i < arr.size; i++){
+                        if(Variable.areEqual(arr.get(i), ref))
+                            return new Reference(true);
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            return new Reference(true);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(false);
             }else if(funcName.equals("sort")){
                 final Array<Reference> arr = (Array) parent.value;
@@ -152,124 +160,202 @@ public class ArrayMember {
                     }
                 }
             }else if(funcName.equals("first")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        return arr.get(i);
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for(int i = 0; i < arr.size; i++){
+                        if(Variable.areEqual(arr.get(i), ref))
+                            return arr.get(i);
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            return arr.get(i);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(null);
             }else if(funcName.equals("last")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = arr.size - 1; i >= 0; i--){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        return arr.get(i);
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for (int i = arr.size - 1; i >= 0; i--) {
+                        if(Variable.areEqual(arr.get(i), ref))
+                            return arr.get(i);
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = arr.size - 1; i >= 0; i--) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            return arr.get(i);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(null);
             }else if(funcName.equals("index") || funcName.equals("firstIndex") || funcName.equals("indexOf") || funcName.equals("firstIndexOf")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        return new Reference(i);
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for(int i = 0; i < arr.size; i++){
+                        if(Variable.areEqual(arr.get(i), ref))
+                            return new Reference(i);
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            return new Reference(i);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
-                return new Reference(null);
+                return new Reference(-1);
             }else if(funcName.equals("lastIndex") || funcName.equals("lastIndexOf")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = arr.size - 1; i >= 0; i--){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        return new Reference(i);
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for (int i = arr.size - 1; i >= 0; i--) {
+                        if(Variable.areEqual(arr.get(i), ref))
+                            return new Reference(i);
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = arr.size - 1; i >= 0; i--) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            return new Reference(i);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
-                return new Reference(null);
+                return new Reference(-1);
             }else if(funcName.equals("removeFirst")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        arr.removeIndex(i);
-                        return new Reference(true);
+                if(child.arguments.size == 2) {
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for (int i = 0; i < arr.size; i++) {
+                        if (Variable.areEqual(arr.get(i), ref)){
+                            arr.removeIndex(i);
+                            return new Reference(true);
+                        }
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            arr.removeIndex(i);
+                            return new Reference(true);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(false);
             }else if(funcName.equals("removeLast")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
-                for(int i = arr.size - 1; i >= 0; i--){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        interpreter.removeBlock();
-                        arr.removeIndex(i);
-                        return new Reference(true);
+                if(child.arguments.size == 2) {
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for (int i = arr.size - 1; i >= 0; i--) {
+                        if (Variable.areEqual(arr.get(i), ref)){
+                            arr.removeIndex(i);
+                            return new Reference(true);
+                        }
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = arr.size - 1; i >= 0; i--) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            interpreter.removeBlock();
+                            arr.removeIndex(i);
+                            return new Reference(true);
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(false);
             }else if(funcName.equals("all")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
                 Array<Reference> result = new Array<Reference>();
-                interpreter.addBlock(null);
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        result.add(arr.get(i).copy());
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for(int i = 0; i < arr.size; i++){
+                        if(Variable.areEqual(arr.get(i), ref))
+                            result.add(arr.get(i).copy());
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            result.add(arr.get(i).copy());
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(result);
             }else if(funcName.equals("size") || funcName.equals("count") || funcName.equals("num") || funcName.equals("length") || funcName.equals("len") || funcName.equals("n")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
                 int result = 0;
-                interpreter.addBlock(null);
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        result++;
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for(int i = 0; i < arr.size; i++){
+                        if(Variable.areEqual(arr.get(i), ref))
+                            result++;
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            result++;
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(result);
             }else if(funcName.equals("removeAll")){
-                String varName = child.arguments.get(1).data.toString();
                 Array<Reference> arr = (Array) parent.value;
-                interpreter.addBlock(null);
                 int num = 0;
-                for(int i = 0; i < arr.size; i++){
-                    interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
-                    if((Boolean)Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value){
-                        arr.removeIndex(i);
-                        num++;
+                if(child.arguments.size == 2){
+                    Reference ref = Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+                    for(int i = 0; i < arr.size; i++){
+                        if(Variable.areEqual(arr.get(i), ref)){
+                            arr.removeIndex(i);
+                            num++;
+                        }
                     }
+                }else {
+                    String varName = child.arguments.get(1).data.toString();
+                    interpreter.addBlock(null);
+                    for (int i = 0; i < arr.size; i++) {
+                        interpreter.stackTop().set(varName, new Variable(Variable.typeOf(arr.get(i).value), arr.get(i), false));
+                        if ((Boolean) Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value) {
+                            arr.removeIndex(i);
+                            num++;
+                        }
+                    }
+                    interpreter.removeBlock();
                 }
-                interpreter.removeBlock();
                 return new Reference(num);
             }else if(funcName.equals("sub")){
                 Array<Reference> arr = (Array) parent.value;

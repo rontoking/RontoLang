@@ -186,7 +186,8 @@ public class Marker {
                         memory.add(varName);
                         if (varName.equals("if") || varName.equals("else") || varName.equals("while") || varName.equals("repeat") || varName.equals("switch") || varName.equals("case") || varName.equals("for") || varName.equals("foreach") || varName.equals("when") || varName.equals("whenever") || varName.equals("thread") || varName.equals("runLater") || varName.equals("enum")) // For instructions with { } blocks.
                             memory.add("(");
-                        else if(varName.equals("func")){
+                        else if(varName.equals("func") && code.substring(end).length() > 1 && code.substring(end).trim().charAt(0) == '('){
+                            System.out.println("FUUUNC");
                             memory.add("(");
                             start = end;
                             insideParams = true;

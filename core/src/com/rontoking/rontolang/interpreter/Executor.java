@@ -129,7 +129,10 @@ public class Executor {
                 return new Reference(instruction.data);
             case GetVariable:
                 String name = instruction.data.toString();
-                if (name.equals("construct")) {
+                if (name.toLowerCase().equals("null")) {
+                    return new Reference(null);
+                }
+                else if (name.equals("construct")) {
                     for (int i = 0; i < interpreter.stackTop().function.parameters.size; i++) {
                         if (instanceBlock.get(interpreter.stackTop().function.parameters.get(i).name) != null) {
                             instanceBlock.set(interpreter.stackTop().function.parameters.get(i).name, interpreter.var(interpreter.stackTop().function.parameters.get(i).name, instanceBlock, isMemberInstruction, mustBePublic));
@@ -270,7 +273,7 @@ public class Executor {
                     }
                 } else { // It's a list.
                     Array<Reference> array = new Array<Reference>();
-                    if(instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
+                    if (instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
                         return new Reference(array);
                     for (int i = 0; i < instruction.arguments.size; i++)
                         array.add(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).copy());
@@ -278,7 +281,7 @@ public class Executor {
                 }
             case Map:
                 ObjectMap<Object, Reference> map = new ObjectMap<Object, Reference>();
-                if(instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
+                if (instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
                     return new Reference(map);
                 for (int i = 0; i < instruction.arguments.size; i++) {
                     Pair pair = (Pair) execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).value;
@@ -295,7 +298,7 @@ public class Executor {
                 } else if (par instanceof ObjectMap) {
                     map = (ObjectMap<Object, Reference>) par;
                     Object key = execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value;
-                    if(!map.containsKey(key))
+                    if (!map.containsKey(key))
                         map.put(key, new Reference(null));
                     return ((ObjectMap<Object, Reference>) par).get(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value);
                 } else if (par instanceof String) {
@@ -361,27 +364,27 @@ public class Executor {
                     } else if (parent.data.equals("console")) {
                         return interpreter.console.properties.get(child.data.toString()).getRef();
                     } else if (parent.data.equals("window")) {
-                        if(child.data.equals("centerX") || child.data.equals("centerx")){
+                        if (child.data.equals("centerX") || child.data.equals("centerx")) {
                             return new Reference(Gdx.graphics.getWidth() / 2);
-                        }else if(child.data.equals("centerY") || child.data.equals("centery")){
+                        } else if (child.data.equals("centerY") || child.data.equals("centery")) {
                             return new Reference(Gdx.graphics.getHeight() / 2);
-                        }else if(child.data.equals("center") || child.data.equals("centerPos")){
+                        } else if (child.data.equals("center") || child.data.equals("centerPos")) {
                             return new Reference(new RontoPoint(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, interpreter));
                         }
                         return interpreter.window.properties.get(child.data.toString()).getRef();
                     } else if (parent.data.equals("prefs")) {
-                        if(child.type == Instruction.Type.Function){
-                            if(child.arguments.get(0).data.equals("open")){
+                        if (child.type == Instruction.Type.Function) {
+                            if (child.arguments.get(0).data.equals("open")) {
                                 interpreter.preferences = Gdx.app.getPreferences(execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock).value.toString());
                                 return null;
-                            }else if(child.arguments.get(0).data.equals("set") || child.arguments.get(0).data.equals("put")){
-                                if(interpreter.preferences == null)
+                            } else if (child.arguments.get(0).data.equals("set") || child.arguments.get(0).data.equals("put")) {
+                                if (interpreter.preferences == null)
                                     ErrorHandler.throwPreferencesError();
                                 interpreter.preferences.putString(execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock).value.toString(), execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value.toString());
                                 interpreter.preferences.flush();
                                 return null;
-                            }else if(child.arguments.get(0).data.equals("get") || child.arguments.get(0).data.equals("find")){
-                                if(interpreter.preferences == null)
+                            } else if (child.arguments.get(0).data.equals("get") || child.arguments.get(0).data.equals("find")) {
+                                if (interpreter.preferences == null)
                                     ErrorHandler.throwPreferencesError();
                                 return new Reference(interpreter.preferences.getString(execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock).value.toString()));
                             }
@@ -424,7 +427,7 @@ public class Executor {
                 function.code = instruction.arguments.get(1).arguments;
                 return new Reference(function);
             case Expr:
-                return new Reference(instruction.arguments.get(0));
+                return new Reference(instruction.arguments);
             case Switch:
                 Reference switchArg = execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock);
                 Array<Instruction> cases = instruction.arguments.get(1).arguments;
@@ -563,7 +566,7 @@ public class Executor {
             case Quotient:
                 return new Reference(Variable.getOperationValue(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value, execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value, Instruction.Type.Quotient, interpreter));
             case Remainder:
-                return new Reference(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)) % Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock)));
+                return new Reference(Variable.getOperationValue(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value, execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value, Instruction.Type.Remainder, interpreter));
             case Power:
                 return new Reference(Math.pow(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)), Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock))));
             case Pointer:
@@ -727,9 +730,9 @@ public class Executor {
                         ((BitmapFont) args[0]).draw(interpreter.spriteBatch, args[1].toString(), (int) Variable.getNum(args[2]), (int) Variable.getNum(args[3]) + RontoUI.getTextHeight(args[1].toString(), ((BitmapFont) args[0])));
                     }
                 } else { // Drawing sprites.
-                    if(args[0] instanceof Array){
-                        Array<Reference> arr = (Array<Reference>)args[0];
-                        for(int i = 0; i < arr.size; i++){
+                    if (args[0] instanceof Array) {
+                        Array<Reference> arr = (Array<Reference>) args[0];
+                        for (int i = 0; i < arr.size; i++) {
                             ((RontoSprite) arr.get(i).value).draw(interpreter);
                         }
                     }
@@ -740,15 +743,15 @@ public class Executor {
                 break;
             case Fill:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
-                if(args.length == 1) {
+                if (args.length == 1) {
                     Color fillColor = ((RontoColor) execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value).getColor();
                     Gdx.gl.glClearColor(fillColor.r, fillColor.g, fillColor.b, fillColor.a);
                     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-                }else if(args.length == 3){
-                    Gdx.gl.glClearColor((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), 1);
+                } else if (args.length == 3) {
+                    Gdx.gl.glClearColor((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), 1);
                     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-                }else{
-                    Gdx.gl.glClearColor((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), (float)Variable.getNum(args[3]));
+                } else {
+                    Gdx.gl.glClearColor((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), (float) Variable.getNum(args[3]));
                     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
                 }
                 break;
@@ -834,55 +837,54 @@ public class Executor {
                     return new Reference(SimplexNoise.sample(Variable.getNum(args[0]), Variable.getNum(args[1]), Variable.getNum(args[2]), Variable.getNum(args[3])));
             case Path:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
-                return Variable.getList(Pathfinding.path((RontoPoint) args[0], (RontoPoint) args[1], (int) Variable.getNum(args[2]), (int) Variable.getNum(args[3]), (Function)args[4], interpreter, ownerClass, instanceBlock));
+                return Variable.getList(Pathfinding.path((RontoPoint) args[0], (RontoPoint) args[1], (int) Variable.getNum(args[2]), (int) Variable.getNum(args[3]), (Function) args[4], interpreter, ownerClass, instanceBlock));
             case Circle:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 interpreter.setToShapeState();
-                if(args.length == 3)
-                    interpreter.shapeRenderer.circle((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]));
+                if (args.length == 3)
+                    interpreter.shapeRenderer.circle((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]));
                 else
-                    interpreter.shapeRenderer.circle((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), (int)Variable.getNum(args[3]));
+                    interpreter.shapeRenderer.circle((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), (int) Variable.getNum(args[3]));
                 break;
             case Ellipse:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 interpreter.setToShapeState();
-                if(args.length == 4)
-                    interpreter.shapeRenderer.ellipse((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), (float)Variable.getNum(args[3]));
+                if (args.length == 4)
+                    interpreter.shapeRenderer.ellipse((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), (float) Variable.getNum(args[3]));
                 else
-                    interpreter.shapeRenderer.ellipse((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), (float)Variable.getNum(args[3]), (int) Variable.getNum(args[3]));
+                    interpreter.shapeRenderer.ellipse((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), (float) Variable.getNum(args[3]), (int) Variable.getNum(args[3]));
                 break;
             case Line:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 interpreter.setToShapeState();
-                if(args.length == 4)
-                    interpreter.shapeRenderer.line((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), (float)Variable.getNum(args[3]));
+                if (args.length == 4)
+                    interpreter.shapeRenderer.line((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), (float) Variable.getNum(args[3]));
                 else
-                    interpreter.shapeRenderer.line(((RontoPoint)args[0]).getVec(), ((RontoPoint)args[1]).getVec());
+                    interpreter.shapeRenderer.line(((RontoPoint) args[0]).getVec(), ((RontoPoint) args[1]).getVec());
                 break;
             case Polygon:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 interpreter.setToShapeState();
-                if(args.length == 1)
-                    interpreter.shapeRenderer.polygon(Variable.getFloatArr((Array<Reference>)args[0]));
-                else{
+                if (args.length == 1)
+                    interpreter.shapeRenderer.polygon(Variable.getFloatArr((Array<Reference>) args[0]));
+                else {
                     float[] vertices = new float[args.length];
-                    for(int i = 0; i < args.length; i++)
-                        vertices[i] = (float)Variable.getNum(args[i]);
+                    for (int i = 0; i < args.length; i++)
+                        vertices[i] = (float) Variable.getNum(args[i]);
                     interpreter.shapeRenderer.polygon(vertices);
                 }
                 break;
             case ShapeColor:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
-                if(args.length == 1) {
-                    if(args[0] instanceof RontoColor)
+                if (args.length == 1) {
+                    if (args[0] instanceof RontoColor)
                         interpreter.shapeRenderer.setColor(((RontoColor) args[0]).getColor());
                     else
                         interpreter.shapeRenderer.setColor(Colors.get(args[0].toString().toUpperCase()));
-                }
-                else if(args.length == 3)
-                    interpreter.shapeRenderer.setColor((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), 1);
+                } else if (args.length == 3)
+                    interpreter.shapeRenderer.setColor((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), 1);
                 else
-                    interpreter.shapeRenderer.setColor((float)Variable.getNum(args[0]), (float)Variable.getNum(args[1]), (float)Variable.getNum(args[2]), (float)Variable.getNum(args[3]));
+                    interpreter.shapeRenderer.setColor((float) Variable.getNum(args[0]), (float) Variable.getNum(args[1]), (float) Variable.getNum(args[2]), (float) Variable.getNum(args[3]));
                 break;
             default:
                 ErrorHandler.throwInstructionError(instruction.type);
@@ -925,6 +927,8 @@ public class Executor {
         } else if (parent.value instanceof Double || parent.value instanceof Float || parent.value instanceof Integer) {
             return NumberMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         }  else if (parent.value instanceof Array) {
+            if(((Array) parent.value).size > 0 && ((Array) parent.value).get(0) instanceof Instruction)
+                return InstructionMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
             return ArrayMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof ObjectMap) {
             return MapMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
@@ -934,8 +938,6 @@ public class Executor {
             return CharMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Texture) {
             return TextureMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
-        } else if (parent.value instanceof Instruction) {
-            return InstructionMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Sound) {
             return SoundMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Music) {

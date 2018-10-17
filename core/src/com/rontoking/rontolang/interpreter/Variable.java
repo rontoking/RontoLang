@@ -1,5 +1,6 @@
 package com.rontoking.rontolang.interpreter;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
@@ -135,9 +136,12 @@ public class Variable {
             return "point";
         if(value instanceof RontoEnum)
             return "enum";
-        if(value instanceof Instruction)
-            return "expr";
+        if(value instanceof Function)
+            return "func";
         if(value instanceof Array){
+            Array expr = (Array)value;
+            if(expr.size > 0 && expr.get(0) instanceof Instruction)
+                return "expr";
             Array<Reference> array = (Array<Reference>)value;
             int dimensions = 1;
             while (array.size > 0 && array.get(0).value instanceof Array){
@@ -222,6 +226,9 @@ public class Variable {
     }
 
     private static boolean areObjectsEqual(Object val1, Object val2){
+        if(val1 == null || val2 == null){
+            return val1 == null && val2 == null;
+        }
         if(val1 instanceof Array && val2 instanceof Array){
             Array<Reference> arr1 = (Array<Reference>)val1;
             Array<Reference> arr2 = (Array<Reference>)val2;
@@ -276,8 +283,14 @@ public class Variable {
             case Sum:
                 if(object1 instanceof Array && object2 instanceof Array) {
                     Array<Reference> result = new Array<Reference>();
-                    result.addAll((Array<Reference>) object1);
-                    result.addAll((Array<Reference>) object2);
+                    Array<Reference> arr1 = (Array<Reference>) object1;
+                    Array<Reference> arr2 = (Array<Reference>) object2;
+                    for(int i = 0; i < arr1.size; i++){
+                        result.add(arr1.get(i).copy());
+                    }
+                    for(int i = 0; i < arr2.size; i++){
+                        result.add(arr2.get(i).copy());
+                    }
                     return result;
                 }
                 if(object1 instanceof RontoPoint && object2 instanceof RontoPoint){
@@ -299,7 +312,17 @@ public class Variable {
                     return Integer.valueOf(object1.toString()) + Integer.valueOf(object2.toString());
                 if(object1 instanceof Byte && object2 instanceof Byte)
                     return Byte.valueOf(object1.toString()) + Byte.valueOf(object2.toString());
-                System.out.println("WTF: " + object1.toString());
+                ErrorHandler.throwOperationError(operation, typeOf(object1), typeOf(object2));
+                return null;
+            case Remainder:
+                if(object1 instanceof Double || object2 instanceof Double)
+                    return Double.valueOf(object1.toString()) % Double.valueOf(object2.toString());
+                if(object1 instanceof Float || object2 instanceof Float)
+                    return Float.valueOf(object1.toString()) % Float.valueOf(object2.toString());
+                if(object1 instanceof Integer || object2 instanceof Integer)
+                    return Integer.valueOf(object1.toString()) % Integer.valueOf(object2.toString());
+                if(object1 instanceof Byte && object2 instanceof Byte)
+                    return Byte.valueOf(object1.toString()) % Byte.valueOf(object2.toString());
                 ErrorHandler.throwOperationError(operation, typeOf(object1), typeOf(object2));
                 return null;
             case Difference:
@@ -504,7 +527,7 @@ public class Variable {
                     if(arr.size > 0){
                         ObjectMap<Object, Reference> x = (ObjectMap<Object, Reference>) value;
                     }else{
-                        reference = new Reference(new ObjectMap<Object, Reference>());
+                        reference.value = new ObjectMap<Object, Reference>();
                     }
                 }else {
                     ObjectMap<Object, Reference> x = (ObjectMap<Object, Reference>) value;
@@ -534,7 +557,9 @@ public class Variable {
             }else if (type.equals("enum")) {
                 RontoEnum x = (RontoEnum) value;
             }else if (type.equals("expr")) {
-                Instruction x = (Instruction) value;
+                Array<Instruction> x = (Array<Instruction>) value;
+            }else if (type.equals("func")) {
+                Function x = (Function) value;
             }else if (type.equals("sprite")) {
                 RontoSprite x = (RontoSprite) value;
             }else if (type.equals("color")) {
@@ -610,8 +635,15 @@ public class Variable {
                 copy.put(keys.get(i), values.get(i).getCopy());
             }
             return new Reference(copy);
-        }else if(value instanceof Texture){
-            return new Reference(new Texture(((Texture)value).getTextureData()));
+        }else if(value instanceof Instance){
+            ObjectMap<String, Variable> original = ((Instance)value).properties.variables;
+            ObjectMap<String, Variable> copy = new ObjectMap<String, Variable>();
+            Array<String> keys = original.keys().toArray();
+            Array<Variable> values = original.values().toArray();
+            for(int i = 0; i < keys.size; i++){
+                copy.put(keys.get(i), values.get(i).getCopy());
+            }
+            return new Reference(copy);
         }else if(value instanceof Reference){
             return new Reference(copyOf(((Reference)value).value));
         }
