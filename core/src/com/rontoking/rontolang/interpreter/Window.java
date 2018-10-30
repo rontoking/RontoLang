@@ -20,6 +20,7 @@ public class Window {
         interpreter.addProperty(properties, "resizable", "bool", isResizable);
         interpreter.addProperty(properties, "vsync", "bool", vSyncOn);
         interpreter.addProperty(properties, "decorated", "bool", isDecorated);
+        interpreter.addProperty(properties, "cam", "cam2", interpreter.cam2);
     }
 
     public void update(){

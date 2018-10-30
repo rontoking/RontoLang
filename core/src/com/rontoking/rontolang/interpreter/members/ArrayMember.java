@@ -12,6 +12,8 @@ public class ArrayMember {
         if (child.type == Instruction.Type.GetVariable) {
             if (child.data.equals("size") || child.data.equals("count") || child.data.equals("num") || child.data.equals("length") || child.data.equals("len") || child.data.equals("n"))
                 return new Reference(((Array) parent.value).size);
+            else if (child.data.equals("last"))
+                return ((Array<Reference>) parent.value).get(((Array<Reference>)parent.value).size - 1);
             else if (child.data.equals("shuffle")) {
                 ((Array) parent.value).shuffle();
                 return null;

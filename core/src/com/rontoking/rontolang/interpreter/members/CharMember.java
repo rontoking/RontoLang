@@ -11,9 +11,9 @@ public class CharMember {
                 return new Reference(Character.isUpperCase(((Character) parent.value)));
             else if (child.data.equals("isLower") || child.data.equals("isLow"))
                 return new Reference(Character.isLowerCase(((Character) parent.value)));
-            else if (child.data.equals("toUpper") || child.data.equals("toUp") || child.data.equals("getUpper") || child.data.equals("getUp"))
+            else if (child.data.equals("toUpper") || child.data.equals("toUp") || child.data.equals("getUpper") || child.data.equals("getUp") || child.data.equals("up"))
                 return new Reference(Character.toUpperCase(((Character) parent.value)));
-            else if (child.data.equals("toLower") || child.data.equals("toLow") || child.data.equals("getLower") || child.data.equals("getLow"))
+            else if (child.data.equals("toLower") || child.data.equals("toLow") || child.data.equals("getLower") || child.data.equals("getLow") || child.data.equals("low"))
                 return new Reference(Character.toLowerCase(((Character) parent.value)));
             else if (child.data.equals("isNum") || child.data.equals("isDigit"))
                 return new Reference(Character.isDigit(((Character) parent.value)));

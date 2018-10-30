@@ -28,11 +28,8 @@ import com.rontoking.rontolang.parser.Parser;
 import com.rontoking.rontolang.program.Class;
 import com.rontoking.rontolang.program.Function;
 import com.rontoking.rontolang.program.Instruction;
-import com.rontoking.rontolang.program.Parameter;
 import com.rontoking.rontolang.rontoui.RontoUI;
 import javafx.application.Platform;
-
-import java.util.ArrayList;
 
 public class Executor {
     public static Reference executeBlock(Array<Instruction> instructions, Interpreter interpreter, Class ownerClass, Function function, Reference[] params, Block instanceBlock){
@@ -139,6 +136,18 @@ public class Executor {
                         }
                     }
                     return null;
+                } else if (name.equals("scanStr")) {
+                    return new Reference(interpreter.scanner.nextLine());
+                } else if (name.equals("scanBool")) {
+                    return new Reference(interpreter.scanner.nextBoolean());
+                } else if (name.equals("scanByte")) {
+                    return new Reference(interpreter.scanner.nextByte());
+                }else if (name.equals("scanInt")) {
+                    return new Reference(interpreter.scanner.nextInt());
+                } else if (name.equals("scanFloat")) {
+                    return new Reference(interpreter.scanner.nextFloat());
+                } else if (name.equals("scanDouble")) {
+                    return new Reference(interpreter.scanner.nextDouble());
                 } else if (name.equals("pressedKeys")) {
                     return new Reference(RontoUI.PRESSED_KEYS);
                 } else if (name.equals("mouseX")) {
@@ -172,6 +181,8 @@ public class Executor {
                     return new Reference(interpreter.packet);
                 } else if (name.equals("deltaTime")) {
                     return new Reference(Gdx.graphics.getDeltaTime());
+                } else if (name.equals("fps")) {
+                    return new Reference(Gdx.graphics.getFramesPerSecond());
                 } else if (name.equals("filledShapes") || name.equals("filledshapes")) {
                     interpreter.setToShapeState(ShapeRenderer.ShapeType.Filled);
                     return null;
@@ -244,14 +255,16 @@ public class Executor {
             case Print:
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < instruction.arguments.size; i++)
-                    sb.append(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).value.toString());
+                    if(instruction.arguments.get(i).type != Instruction.Type.Empty)
+                        sb.append(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).value.toString());
                 System.out.print(sb.toString());
                 interpreter.console.print(sb.toString(), interpreter);
                 break;
             case Println:
                 sb = new StringBuilder();
                 for (int i = 0; i < instruction.arguments.size; i++)
-                    sb.append(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).value.toString());
+                    if(instruction.arguments.get(i).type != Instruction.Type.Empty)
+                        sb.append(execute(instruction.arguments.get(i), interpreter, ownerClass, instanceBlock).value.toString());
                 System.out.println(sb.toString());
                 interpreter.console.println(sb.toString(), interpreter);
                 break;
@@ -363,6 +376,14 @@ public class Executor {
                         return executeBlock(func.code, interpreter, interpreter.getClass(ownerClass.parentClass), func, params, instanceBlock);
                     } else if (parent.data.equals("console")) {
                         return interpreter.console.properties.get(child.data.toString()).getRef();
+                    } else if (parent.data.equals("website")) {
+                        if(child.data.equals("stop")) {
+                            interpreter.website.stop();
+                            return new Reference(null);
+                        }
+                        if(child.data.equals("port"))
+                            return new Reference(interpreter.website.getListeningPort());
+                        ErrorHandler.throwMemberError("website", child.data.toString());
                     } else if (parent.data.equals("window")) {
                         if (child.data.equals("centerX") || child.data.equals("centerx")) {
                             return new Reference(Gdx.graphics.getWidth() / 2);
@@ -422,7 +443,7 @@ public class Executor {
                 }
                 break;
             case Func:
-                Function function = new Function(null);
+                Function function = new Function("");
                 function.parameters = Parser.parseParams(ownerClass.name, function.name, instruction.arguments.get(0).data.toString());
                 function.code = instruction.arguments.get(1).arguments;
                 return new Reference(function);
@@ -580,9 +601,23 @@ public class Executor {
                     e.printStackTrace();
                 }
                 break;
+            case WaitUntil:
+                if(instruction.arguments.size == 1){
+                    while (!(Boolean)execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value);
+                }else{
+                    long sleepTime = (long) Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock));
+                    while (!(Boolean)execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value){
+                        try {
+                            Thread.sleep(sleepTime);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
             case TypeOf:
                 return new Reference(Variable.typeOf(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value));
-            case Exec:
+            case Eval:
                 Array<Instruction> instructions = Expression.parseExpr(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString(), true).getInstruction().arguments;
                 Reference ref;
                 for (int i = 1; i < instructions.size; i++) {
@@ -636,6 +671,23 @@ public class Executor {
                 return new Reference(Math.sqrt(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock))));
             case ToDeg:
                 return new Reference(Math.toDegrees(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock))));
+            case Snap:
+                double cellSize = Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock));
+                return new Reference((int)Math.floor(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)) / cellSize) * cellSize);
+            case Digit:
+                return new Reference((Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)) + "").replace("-", "").replace(".", "").charAt((int)Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock))));
+            case Prime:
+                int num = (int)Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock));
+                if(num <= 1)
+                    return new Reference(false);
+                if(num <= 3)
+                    return new Reference(true);
+                if(num % 2 == 0)
+                    return new Reference(false);
+                for(int i = 5; i*i <= num; i += 2)
+                    if(num % i == 0)
+                        return new Reference(false);
+                return new Reference(true);
             case ToRad:
                 return new Reference(Math.toRadians(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock))));
             case Empty:
@@ -694,8 +746,8 @@ public class Executor {
                 else if (args[0] instanceof FileHandle)
                     return new Reference(new RontoSprite(interpreter.getTexture((FileHandle) args[0]), interpreter));
                 return new Reference(new RontoSprite(interpreter.getTexture(Gdx.files.internal(Interpreter.IMAGE_PATH + execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString())), interpreter));
-            case Camera2d:
-                return new Reference(new RontoCamera2D(interpreter));
+            case Cam2:
+                return new Reference(new RontoCam2(interpreter));
             case Point:
                 return new Reference(new RontoPoint(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value, execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock).value, interpreter));
             case Color:
@@ -768,7 +820,7 @@ public class Executor {
             case Deserialize:
                 return Variable.deserialize(Variable.getByteArr((Array<Reference>) execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value));
             case Parse:
-                return Variable.deserialize(Variable.getByteArr((Array<Reference>) execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value));
+                return new Reference(Expression.parseExpr(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString(), true).getInstruction().arguments);
             case KeyDown:
                 return new Reference(Gdx.input.isKeyPressed(Input.Keys.valueOf(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString())));
             case KeyPressed:
@@ -827,6 +879,8 @@ public class Executor {
                 return new Reference(Gdx.net.openURI(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString()));
             case Google:
                 return new Reference(Gdx.net.openURI("https://www.google.com/search?q=" + execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString()));
+            case Html:
+                return new Reference(interpreter.htmlSrc(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString()));
             case Noise:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 if (args.length == 2)
@@ -838,6 +892,18 @@ public class Executor {
             case Path:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 return Variable.getList(Pathfinding.path((RontoPoint) args[0], (RontoPoint) args[1], (int) Variable.getNum(args[2]), (int) Variable.getNum(args[3]), (Function) args[4], interpreter, ownerClass, instanceBlock));
+            case Website:
+                args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
+                if(args.length == 1 || args[1] instanceof Array)
+                    interpreter.website = new Website(8080, Gdx.files.internal(Interpreter.IMAGE_PATH), (Function)args[0], interpreter, ownerClass, instanceBlock);
+                else if(args.length == 2){
+                    if(args[0] instanceof Function)
+                        interpreter.website = new Website(8080, (FileHandle)args[1], (Function)args[0], interpreter, ownerClass, instanceBlock);
+                    else
+                        interpreter.website = new Website((int)Variable.getNum(args[0]), Gdx.files.internal(Interpreter.IMAGE_PATH), (Function)args[1], interpreter, ownerClass, instanceBlock);
+                }else
+                    interpreter.website = new Website((int)Variable.getNum(args[0]), (FileHandle)args[2], (Function)args[1], interpreter, ownerClass, instanceBlock);
+                break;
             case Circle:
                 args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
                 interpreter.setToShapeState();
@@ -912,6 +978,12 @@ public class Executor {
             return Variable.copyOf(parent.value);
         } else if (child.type == Instruction.Type.GetVariable && (child.data.equals("type"))) {
             return new Reference(Variable.typeOf(parent.value));
+        }  else if (child.type == Instruction.Type.Function && child.arguments.get(0).data.equals("swap") && child.arguments.size == 2) {
+            Reference ref = execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock);
+            Object temp = ref.value;
+            ref.value = parent.value;
+            parent.value = temp;
+            return parent;
         } else if (child.type == Instruction.Type.GetVariable && (child.data.equals("str") || child.data.equals("toStr") || child.data.equals("toString"))) {
             return new Reference(parent.value.toString());
         } else if (child.type == Instruction.Type.GetVariable && (child.data.equals("print"))) {

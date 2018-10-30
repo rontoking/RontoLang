@@ -1,6 +1,5 @@
 package com.rontoking.rontolang.interpreter;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
@@ -118,8 +117,8 @@ public class Variable {
             return "file";
         if(value instanceof RontoSprite)
             return "sprite";
-        if(value instanceof RontoCamera2D)
-            return "camera2d";
+        if(value instanceof RontoCam2)
+            return "cam2";
         if(value instanceof RontoServer)
             return "server";
         if(value instanceof RontoClient)
@@ -538,8 +537,8 @@ public class Variable {
                 Sound x = (Sound) value;
             }else if (type.equals("music")) {
                 Music x = (Music) value;
-            }else if (type.equals("camera2d")) {
-                RontoCamera2D x = (RontoCamera2D) value;
+            }else if (type.equals("cam2")) {
+                RontoCam2 x = (RontoCam2) value;
             }else if (type.equals("server")) {
                 RontoServer x = (RontoServer) value;
             }else if (type.equals("client")) {
@@ -721,7 +720,7 @@ public class Variable {
     private static String repeat(String s, int n){
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i < n; i++){
-            sb.append(n);
+            sb.append(s);
         }
         return sb.toString();
     }

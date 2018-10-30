@@ -46,6 +46,7 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
         compile group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
+        compile 'org.nanohttpd:nanohttpd:2.2.0'
     }
 }
 
@@ -69,6 +70,7 @@ project(":android") {
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86_64"
         compile group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
+        compile 'org.nanohttpd:nanohttpd:2.2.0'
     }
 }
 
@@ -80,6 +82,7 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         compile group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
+        compile 'org.nanohttpd:nanohttpd:2.2.0'
     }
 }
 

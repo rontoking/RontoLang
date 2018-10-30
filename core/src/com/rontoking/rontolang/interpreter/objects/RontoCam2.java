@@ -2,20 +2,16 @@ package com.rontoking.rontolang.interpreter.objects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.rontoking.rontolang.interpreter.*;
 import com.rontoking.rontolang.program.Class;
 import com.rontoking.rontolang.program.Instruction;
 
-public class RontoCamera2D extends RontoObject{
+public class RontoCam2 extends RontoObject{
     public OrthographicCamera camera;
 
-    public RontoCamera2D(Interpreter interpreter){
+    public RontoCam2(Interpreter interpreter){
         super();
         interpreter.addProperty(properties, "x", "double", 0);
         interpreter.addProperty(properties, "y", "double", 0);
@@ -38,7 +34,7 @@ public class RontoCamera2D extends RontoObject{
     @Override
     protected Reference noArgFunc(String funcName, Interpreter interpreter){
         if (funcName.equals("mount")) {
-            interpreter.camera2d = this;
+            interpreter.cam2 = this;
             updateCamera();
             setBatchMatrix(interpreter.spriteBatch);
             setBatchMatrix(interpreter.shapeRenderer);

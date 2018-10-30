@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.rontoking.rontolang.interpreter.objects.*;
@@ -30,6 +29,9 @@ import com.rontoking.rontolang.rontoui.nodes.TextArea;
 import com.rontoking.rontolang.rontoui.nodes.TextField;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Scanner;
 
 public class Interpreter {
     private Program program;
@@ -68,10 +70,12 @@ public class Interpreter {
     public SocketState socketState;
     private BatchState batchState;
     public Preferences preferences;
+    public Scanner scanner;
 
-    public RontoCamera2D camera2d;
+    public RontoCam2 cam2;
     private String clipboard;
     public Reference clipboardRef;
+    public Website website;
 
     public enum SocketState{
         None, Client, Server
@@ -90,8 +94,10 @@ public class Interpreter {
         this.shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         batchState = BatchState.None;
+        scanner = new Scanner(System.in);
         loadFont();
 
+        MimeType.load();
         textures = new Array<Texture>();
         fonts = new Array<BitmapFont>();
         sounds = new Array<Sound>();
@@ -125,10 +131,12 @@ public class Interpreter {
         server = new RontoServer();
         socket = new RontoSocket();
         client = new RontoClient();
-        camera2d = new RontoCamera2D(this);
-        camera2d.camera.position.set(-Gdx.graphics.getWidth() / 2, -Gdx.graphics.getHeight() / 2, 0);
-        camera2d.setBatchMatrix(spriteBatch);
-        camera2d.setBatchMatrix(shapeRenderer);
+        cam2 = new RontoCam2(this);
+        cam2.getProperties().get("x").getRef().value = Gdx.graphics.getWidth() / 2;
+        cam2.getProperties().get("y").getRef().value = Gdx.graphics.getHeight() / 2;
+        cam2.camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
+        cam2.setBatchMatrix(spriteBatch);
+        cam2.setBatchMatrix(shapeRenderer);
     }
 
     private void loadFont(){
@@ -140,6 +148,7 @@ public class Interpreter {
     }
 
     public void dispose(){
+        scanner.close();
         if(disposeFunc != null)
             Executor.executeBlock(disposeFunc.code, this, program.getClass("Main"), disposeFunc, new Reference[disposeFunc.parameters.size], null);
 
@@ -216,9 +225,9 @@ public class Interpreter {
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        if(camera2d != null){
-            camera2d.setBatchMatrix(spriteBatch);
-            camera2d.setBatchMatrix(shapeRenderer);
+        if(cam2 != null){
+            cam2.setBatchMatrix(spriteBatch);
+            cam2.setBatchMatrix(shapeRenderer);
         }
         batchState = BatchState.None;
         checkEvents();
@@ -423,6 +432,23 @@ public class Interpreter {
         batchState = BatchState.Shapes;
     }
 
+    public String htmlSrc(String theURL){
+        URL url = null;
+        try {
+            url = new URL(theURL);
+            InputStream is = url.openStream();
+            int ptr = 0;
+            StringBuilder buffer = new StringBuilder();
+            while ((ptr = is.read()) != -1) {
+                buffer.append((char)ptr);
+            }
+            return buffer.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public void setToShapeState(ShapeRenderer.ShapeType shapeType){
         if(batchState == BatchState.Sprites){
             spriteBatch.end();
@@ -437,8 +463,8 @@ public class Interpreter {
     }
 
     public ObjectMap<String, Variable> getRontoObjectProperties(String name){
-        if(name.equals("camera2d"))
-            return new RontoCamera2D(this).getProperties();
+        if(name.equals("cam2"))
+            return new RontoCam2(this).getProperties();
         if(name.equals("color"))
             return new RontoColor(Color.WHITE, this).getProperties();
         if(name.equals("point"))

@@ -21,4 +21,23 @@ public class Function {
         this.parameters = new Array<Parameter>();
         this.code = new Array<Instruction>();
     }
+
+    @Override
+    public String toString(){
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("func(").append(access.name().toLowerCase()).append(", ").append(type).append(", ").append(name).append(", (");
+        for(int i = 0; i < parameters.size; i++){
+            if(i != 0)
+                stringBuilder.append(", ");
+            stringBuilder.append(parameters.get(i).toString());
+        }
+        stringBuilder.append("), {");
+        for(int i = 0; i < code.size; i++){
+            if(i != 0)
+                stringBuilder.append(", ");
+            stringBuilder.append(code.get(i).toString());
+        }
+        stringBuilder.append("})");
+        return stringBuilder.toString();
+    }
 }

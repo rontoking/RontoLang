@@ -1,5 +1,28 @@
-- Time type and global time var that gives current time and way to do arithmetic with time
-- Web Server hosting with website value type using NanoHTTP
-- 3D Camera
+- 3D Camera, rename point to point2 and add point3, add matrix, polygon, sphere...
 - 3D Shapes (minecraft blocks ;d)
-- UI
+- Finish RontoUI!!!
+
+RONTOLANG IDE
+
+- window.cam
+- double snap(double num, double cellSize)
+- int digit(double num, int index)
+- bool prime(int num)
+- cam2
+- scanStr, scanBool, scanByte, scanInt, scanFloat, scanDouble
+- exec -> eval
+- any.swap(any);
+- waitUntil(bool cond)
+- waitUntil(bool cond, int millisDeltaPerCheck)
+- change parse() to expr parse(string expression)
+- string html(string url)
+- int fps global var
+- website(func serve(string uri, string(string) params))
+- website(func serve(string uri, string(string) params), file root)
+- website(int port, func serve(string uri, string(string) params))
+- website(int port, func serve(string uri, string(string) params), file root)
+- website.stop and website.port
+- list.last
+
+BUG?
+- Make it possible to make expr type values with expr() and parse() being only a part of a statement (without a ;) so that they can be combined (maybe with + operator) into bigger expr values..

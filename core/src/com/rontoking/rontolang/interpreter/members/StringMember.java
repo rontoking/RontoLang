@@ -16,7 +16,7 @@ public class StringMember {
                 }
             } else if (funcName.equals("charAt")) {
                 return new Reference((parent.value.toString()).charAt((int) Variable.getNum(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock))));
-            } else if (funcName.equals("replace")) {
+            }else if (funcName.equals("replace")) {
                 return new Reference((parent.value.toString()).replace(Executor.execute(child.arguments.get(1), interpreter, ownerClass, instanceBlock).value.toString(), Executor.execute(child.arguments.get(2), interpreter, ownerClass, instanceBlock).value.toString()));
             } else if (funcName.equals("split")) {
                 if (child.arguments.size == 1)
@@ -41,9 +41,9 @@ public class StringMember {
                 return new Reference((parent.value.toString()).length());
             else if (child.data.equals("trim"))
                 return new Reference((parent.value.toString()).trim());
-            else if (child.data.equals("toUpper") || child.data.equals("toUp") || child.data.equals("getUpper") || child.data.equals("getUp"))
+            else if (child.data.equals("toUpper") || child.data.equals("toUp") || child.data.equals("getUpper") || child.data.equals("getUp") || child.data.equals("up"))
                 return new Reference((parent.value.toString()).toUpperCase());
-            else if (child.data.equals("toLower") || child.data.equals("toLow") || child.data.equals("getLower") || child.data.equals("getLow"))
+            else if (child.data.equals("toLower") || child.data.equals("toLow") || child.data.equals("getLower") || child.data.equals("getLow") || child.data.equals("low"))
                 return new Reference((parent.value.toString()).toLowerCase());
             else if (child.data.equals("list") || child.data.equals("array"))
                 return new Reference(Variable.toCharArray((parent.value.toString())));

@@ -10,4 +10,14 @@ public class Parameter {
         this.isReference = isReference;
         this.name = name;
     }
+
+    @Override
+    public String toString(){
+        String s = name;
+        if(isReference)
+            s = "&" + name;
+        if(type.equals(""))
+            return s;
+        return type + " " + s;
+    }
 }

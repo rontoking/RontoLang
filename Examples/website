@@ -1,0 +1,12 @@
+static num = 1;
+
+static main(){
+    website(func(str uri, str[str] params){
+        return("Hello, World #" + num);
+    });
+    browse("http://localhost:8080/");
+}
+
+static update(){
+    num++;
+}

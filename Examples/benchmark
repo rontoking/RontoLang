@@ -1,0 +1,18 @@
+static sprite[] sprites = list();
+
+static main(){
+    for(int i = 0; i < 1000; i++){
+        sprites.add(sprite("rontolang.png"));
+        sprites.last.x = random(0, window.width);
+        sprites.last.y = random(-100, window.height);
+    }
+}
+
+static update(){
+    window.title = fps;
+    foreach(s : sprites){
+        s.x += random(-3, 3);
+        s.y += random(-3, 3);
+        s.draw;
+    }
+}

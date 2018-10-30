@@ -1,9 +1,9 @@
 static sprite spr;
-static camera2d cam;
+static cam2 cam;
 
 static main(){
     spr = sprite("rontolang.png");
-    cam = camera2d();
+    cam = cam2();
     cam.mount;
 }
 
