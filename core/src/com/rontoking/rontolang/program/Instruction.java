@@ -9,12 +9,12 @@ public class Instruction {
         SetVariable, GetVariable,
         Function,
         Sum, Difference, Product, Quotient, Remainder, Power, Member,
-        If, Else, Else_If, While, Repeat, Switch, Case, For, Foreach, When, Whenever, Thread, Func, Expr, Enum,
+        If, Else, Else_If, While, Repeat, Switch, Case, For, Foreach, When, Whenever, Thread, Func, Expr, Enum, After, Every,
         Equal, Not_Equal, Not, Greater, Lesser, Greater_Or_Equal, Lesser_Or_Equal, And, Or, Xor,
         Comment,
         Eval, Wait, WaitUntil, TypeOf,
         Pair, Implies, Concat,
-        RunLater,
+        RunLater, RemoveTimer, RemoveEvent,
         Random, Abs, Atan, Atan2, Sin, Cos, Tan, Sinh, Cosh, Tanh, Round, Ceil, Floor, Asin, Acos, Max, Min, Sqrt, ToDeg, ToRad, Snap, Digit, Prime,
         Pointer, Copy, Super,
         Return, Empty,
@@ -23,7 +23,7 @@ public class Instruction {
         Color, Point, Sprite, Rect, Cam2,
         Serialize, Deserialize, Parse,
         KeyDown, KeyPressed, MousePressed, MouseClicked, MouseDown, MouseReleased, MouseDouble,
-        MoveMouse, Browse, Google, Html, Website,
+        MoveMouse, Browse, Google, Html, Website, Input,
 
         Draw, Fill, Dst, Noise, Path,
         Circle, Ellipse, Line, Polygon, ShapeColor

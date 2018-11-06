@@ -719,6 +719,13 @@ public class Variable {
 
     private static String repeat(String s, int n){
         StringBuilder sb = new StringBuilder();
+        if(n < 0){
+            n = -n;
+            String reversed = "";
+            for(int i = s.length() - 1; i >= 0; i--)
+                reversed += s.charAt(i);
+            s = reversed;
+        }
         for(int i = 0; i < n; i++){
             sb.append(s);
         }

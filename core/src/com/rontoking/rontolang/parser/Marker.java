@@ -184,8 +184,9 @@ public class Marker {
                     }
                     else {
                         memory.add(varName);
-                        if (varName.equals("if") || varName.equals("else") || varName.equals("while") || varName.equals("repeat") || varName.equals("switch") || varName.equals("case") || varName.equals("for") || varName.equals("foreach") || varName.equals("when") || varName.equals("whenever") || varName.equals("thread") || varName.equals("runLater") || varName.equals("enum")) // For instructions with { } blocks.
+                        if (varName.equals("if") || varName.equals("else") || varName.equals("while") || varName.equals("repeat") || varName.equals("switch") || varName.equals("case") || varName.equals("for") || varName.equals("foreach") || varName.equals("when") || varName.equals("whenever") || varName.equals("thread") || varName.equals("runLater") || varName.equals("enum") || varName.equals("after") || varName.equals("every")) { // For instructions with { } blocks.
                             memory.add("(");
+                        }
                         else if(varName.equals("func") && code.substring(end).length() > 1 && code.substring(end).trim().charAt(0) == '('){
                             memory.add("(");
                             start = end;

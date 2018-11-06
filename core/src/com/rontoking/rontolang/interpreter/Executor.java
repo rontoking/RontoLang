@@ -121,6 +121,8 @@ public class Executor {
 
     public static Reference execute(final Instruction instruction, final Interpreter interpreter, final Class ownerClass, boolean isProperty, final Block instanceBlock, boolean isMemberInstruction, boolean mustBePublic) {
         interpreter.updateGlobals(true);
+        if(instruction.arguments.size == 1 && instruction.arguments.get(0).type == Instruction.Type.Empty)
+            instruction.arguments.clear();
         switch (instruction.type) {
             case Raw_Value:
                 return new Reference(instruction.data);
@@ -136,6 +138,24 @@ public class Executor {
                         }
                     }
                     return null;
+                } else if (name.equals("input")) {
+                    interpreter.WAITING_FOR_INPUT = true;
+                    interpreter.TEXT_INPUT = null;
+                    Gdx.input.getTextInput(new Input.TextInputListener() {
+                        @Override
+                        public void input(String text) {
+                            interpreter.TEXT_INPUT = text;
+                            interpreter.WAITING_FOR_INPUT = false;
+                        }
+
+                        @Override
+                        public void canceled() {
+                            interpreter.TEXT_INPUT = null;
+                            interpreter.WAITING_FOR_INPUT = false;
+                        }
+                    }, "Enter Text", "", "");
+                    while (interpreter.WAITING_FOR_INPUT);
+                    return new Reference(interpreter.TEXT_INPUT);
                 } else if (name.equals("scanStr")) {
                     return new Reference(interpreter.scanner.nextLine());
                 } else if (name.equals("scanBool")) {
@@ -515,10 +535,22 @@ public class Executor {
                 block.arguments.add(whileInstruction);
                 return executeBlock(block.arguments, interpreter, ownerClass, null, null, instanceBlock);
             case When:
-                interpreter.addEvent(new Event(instruction.arguments.get(0), false, instruction.arguments.get(1).arguments, ownerClass, instanceBlock));
+                interpreter.events.add(new Event(instruction.arguments.get(0), false, instruction.arguments.get(1).arguments, ownerClass, instanceBlock));
                 break;
             case Whenever:
-                interpreter.addEvent(new Event(instruction.arguments.get(0), true, instruction.arguments.get(1).arguments, ownerClass, instanceBlock));
+                interpreter.events.add(new Event(instruction.arguments.get(0), true, instruction.arguments.get(1).arguments, ownerClass, instanceBlock));
+                break;
+            case After:
+                interpreter.timers.add(new Timer(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)), false, instruction.arguments.get(1).arguments, ownerClass, instanceBlock));
+                break;
+            case Every:
+                interpreter.timers.add(new Timer(Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)), true, instruction.arguments.get(1).arguments, ownerClass, instanceBlock));
+                break;
+            case RemoveEvent:
+                interpreter.events.removeIndex((int)Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)));
+                break;
+            case RemoveTimer:
+                interpreter.timers.removeIndex((int)Variable.getNum(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock)));
                 break;
             case Thread:
                 Thread thread = new Thread(new Runnable() {
@@ -605,7 +637,7 @@ public class Executor {
                 if(instruction.arguments.size == 1){
                     while (!(Boolean)execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value);
                 }else{
-                    long sleepTime = (long) Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock));
+                    long sleepTime = (long) (Variable.getNum(execute(instruction.arguments.get(1), interpreter, ownerClass, instanceBlock)) * 1000);
                     while (!(Boolean)execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value){
                         try {
                             Thread.sleep(sleepTime);
@@ -714,6 +746,33 @@ public class Executor {
                 else if (args[0] instanceof FileHandle)
                     return new Reference(interpreter.getFont((FileHandle) args[0], (int) Variable.getNum(args[1])));
                 return new Reference(interpreter.getFont(Gdx.files.internal(Interpreter.FONT_PATH + args[0].toString()), (int) Variable.getNum(args[1])));
+            case Input:
+                args = getArgs(instruction, interpreter, ownerClass, instanceBlock);
+                String title = "Enter Text";
+                String text = "";
+                String hint = "";
+                title = args[0].toString();
+                if(args.length > 1)
+                    text = args[1].toString();
+                if(args.length > 2)
+                    hint = args[2].toString();
+                interpreter.WAITING_FOR_INPUT = true;
+                interpreter.TEXT_INPUT = null;
+                Gdx.input.getTextInput(new Input.TextInputListener() {
+                    @Override
+                    public void input(String text) {
+                        interpreter.TEXT_INPUT = text;
+                        interpreter.WAITING_FOR_INPUT = false;
+                    }
+
+                    @Override
+                    public void canceled() {
+                        interpreter.TEXT_INPUT = null;
+                        interpreter.WAITING_FOR_INPUT = false;
+                    }
+                }, title, text, hint);
+                while (interpreter.WAITING_FOR_INPUT);
+                return new Reference(interpreter.TEXT_INPUT);
             case Str:
                 return new Reference(execute(instruction.arguments.get(0), interpreter, ownerClass, instanceBlock).value.toString());
             case String:
@@ -1006,7 +1065,9 @@ public class Executor {
             return MapMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof String) {
             return StringMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
-        } else if (parent.value instanceof Character) {
+        } else if (parent.value instanceof Boolean) {
+            return BoolMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
+        }  else if (parent.value instanceof Character) {
             return CharMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);
         } else if (parent.value instanceof Texture) {
             return TextureMember.getMemberValue(parent, child, interpreter, ownerClass, instanceBlock);

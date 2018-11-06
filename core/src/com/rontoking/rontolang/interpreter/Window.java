@@ -1,16 +1,18 @@
 package com.rontoking.rontolang.interpreter;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Cursor;
 
 public class Window {
     public Block properties;
     private String lastTitle;
-    private boolean isResizable, vSyncOn, isDecorated;
+    private boolean isResizable, vSyncOn, isDecorated, isCatched;
 
     public Window(Interpreter interpreter){
         properties = new Block(null);
         lastTitle = "RontoLang";
         isResizable = true;
+        isCatched = false;
         vSyncOn = false;
         isDecorated = true;
         interpreter.addProperty(properties, "width", "int", Gdx.graphics.getWidth());
@@ -18,6 +20,7 @@ public class Window {
         interpreter.addProperty(properties, "title", "str", lastTitle);
         interpreter.addProperty(properties, "fullscreen", "bool", false);
         interpreter.addProperty(properties, "resizable", "bool", isResizable);
+        interpreter.addProperty(properties, "catch", "bool", isCatched);
         interpreter.addProperty(properties, "vsync", "bool", vSyncOn);
         interpreter.addProperty(properties, "decorated", "bool", isDecorated);
         interpreter.addProperty(properties, "cam", "cam2", interpreter.cam2);
@@ -37,6 +40,9 @@ public class Window {
         }if((Boolean)properties.get("resizable").getRef().value != isResizable){
             isResizable = !isResizable;
             Gdx.graphics.setResizable(isResizable);
+        }if((Boolean)properties.get("catch").getRef().value != isCatched){
+            isCatched = !isCatched;
+            Gdx.input.setCursorCatched(isCatched);
         }if((Boolean)properties.get("vsync").getRef().value != vSyncOn){
             vSyncOn = !vSyncOn;
             Gdx.graphics.setVSync(vSyncOn);

@@ -405,6 +405,14 @@ public class Expression {
             args.add(arguments.get(0).getInstruction());
             args.add(arguments.get(1).getInstruction());
             return new Instruction(Instruction.Type.If, args);
+        }else if ("after".equals(type)) {
+            args.add(arguments.get(0).getInstruction());
+            args.add(arguments.get(1).getInstruction());
+            return new Instruction(Instruction.Type.After, args);
+        }else if ("every".equals(type)) {
+            args.add(arguments.get(0).getInstruction());
+            args.add(arguments.get(1).getInstruction());
+            return new Instruction(Instruction.Type.Every, args);
         } else if ("runLater".equals(type)) {
             args.add(arguments.get(0).getInstruction());
             args.add(arguments.get(1).getInstruction());

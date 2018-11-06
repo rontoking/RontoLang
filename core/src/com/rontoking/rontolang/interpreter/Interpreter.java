@@ -40,7 +40,8 @@ public class Interpreter {
 
     private int propertyNum;
     private Function updateFunc, disposeFunc;
-    private Array<Event> events;
+    public Array<Event> events;
+    public Array<Timer> timers;
 
     public static final String CODE_PATH = "code/";
     public static final String IMAGE_PATH = "images/";
@@ -77,6 +78,9 @@ public class Interpreter {
     public Reference clipboardRef;
     public Website website;
 
+    public boolean WAITING_FOR_INPUT;
+    public String TEXT_INPUT;
+
     public enum SocketState{
         None, Client, Server
     }
@@ -86,10 +90,14 @@ public class Interpreter {
     }
 
     public Interpreter(Program program, SpriteBatch spriteBatch){
+        WAITING_FOR_INPUT = false;
+        TEXT_INPUT = null;
+
         this.program = program;
         this.stack = new Array<Block>();
         this.classBlocks = new ObjectMap<String, Block>();
         this.events = new Array<Event>();
+        this.timers = new Array<Timer>();
         this.spriteBatch = spriteBatch;
         this.shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
@@ -230,6 +238,7 @@ public class Interpreter {
             cam2.setBatchMatrix(shapeRenderer);
         }
         batchState = BatchState.None;
+        checkTimers();
         checkEvents();
         Executor.executeBlock(updateFunc.code, this, program.getClass("Main"), updateFunc, new Reference[updateFunc.parameters.size], null);
         if(console.isVisible()){
@@ -356,13 +365,18 @@ public class Interpreter {
         }
     }
 
+    private void checkTimers(){
+        for(int i = 0; i < timers.size; i++){
+            if(timers.get(i).check(this)){
+                timers.removeIndex(i);
+                i--; // To not skip a timer.
+            }
+        }
+    }
+
     public void addProperty(Block properties, String name, String type, Object value){
         Variable.checkIfTypeAndValueMatch(name, type, new Reference(value), this);
         properties.set(name, new Variable(type, Function.Access.Public, value));
-    }
-
-    public void addEvent(Event event){ // Either a when or whenever.
-        events.add(event);
     }
 
     public void resize(int width, int height){
